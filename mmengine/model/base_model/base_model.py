@@ -142,6 +142,8 @@ class BaseModel(BaseModule):
             list: The predictions of given data.
         """
         data = self.data_preprocessor(data, False)
+        # self._run_forward(data, mode='tensor')
+        self._run_forward(data, mode='loss')
         return self._run_forward(data, mode='predict')  # type: ignore
 
     def parse_losses(

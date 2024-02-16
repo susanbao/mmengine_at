@@ -56,6 +56,7 @@ class DefaultSampler(Sampler):
         self.seed = seed
         self.epoch = 0
         self.round_up = round_up
+        self.shift = 0 # default = 0
 
         if self.round_up:
             self.num_samples = math.ceil(len(self.dataset) / world_size)
@@ -63,7 +64,7 @@ class DefaultSampler(Sampler):
         else:
             self.num_samples = math.ceil(
                 (len(self.dataset) - rank) / world_size)
-            self.total_size = len(self.dataset)
+            self.total_size = len(self.dataset) - self.shift
 
     def __iter__(self) -> Iterator[int]:
         """Iterate the indices."""
@@ -73,7 +74,7 @@ class DefaultSampler(Sampler):
             g.manual_seed(self.seed + self.epoch)
             indices = torch.randperm(len(self.dataset), generator=g).tolist()
         else:
-            indices = torch.arange(len(self.dataset)).tolist()
+            indices = torch.arange(self.shift, len(self.dataset)).tolist()
 
         # add extra samples to make it evenly divisible
         if self.round_up:
@@ -88,7 +89,7 @@ class DefaultSampler(Sampler):
 
     def __len__(self) -> int:
         """The number of samples in this rank."""
-        return self.num_samples
+        return self.num_samples - self.shift
 
     def set_epoch(self, epoch: int) -> None:
         """Sets the epoch for this sampler.
